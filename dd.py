@@ -58,6 +58,70 @@ def kdtree(points):
         )
     return build(points=list(points), depth=0)
 
+
+NearestNeighbor = collections.namedtuple("NearestNeighbor", ["point", "distance"])
+
+def find_nearest_neighbor(*, tree, point):
+    """Find the nearest neighbor in a k-d tree for a given point."""
+    k = len(point)
+    conflicts = []
+
+    # best = None
+    def search(*, tree, depth):
+        """Recursively search through the k-d tree to find the
+        nearest neighbor.
+        """
+        # nonlocal best
+        
+        if tree is None:
+            return
+        
+        distance = calculate_hypot(tree.value, point)
+
+        if distance <= CONFLICT_RADIUS:
+            conflicts.append(tree.value)
+
+        axis = depth % k
+        diff = point[axis] - tree.value[axis]
+
+        if diff <= 0:
+            close, away = tree.left, tree.right
+        else:
+            close, away = tree.right, tree.left
+        
+        search(tree=close, depth=depth+1)
+        if diff**2 > CONFLICT_RADIUS:
+            search(tree=away, depth=depth+1)
+    
+    search(tree=tree, depth=0)
+    return conflicts
+
+
+
+# def find_conflict_points(*, tree, position):
+#     """MY FUNCTION _____ Find any points in conflict with each other"""
+#     k = len(position)
+
+#     def traverse(*, tree, depth):
+#         """Recurse through tree to find points in a conflict zone"""
+
+
+# USED TUPLES - CHANGE BACK TO LISTS
+positions = [(gen_coord(), gen_coord()) for i in range(NUM_DRONES)]
+print(positions)
+# positions = [ (1, 2), (3, 2), (4, 1), (3, 5) ]
+tree = kdtree(positions)
+print(find_nearest_neighbor(tree=tree, point=(65702, 111882)))
+
+
+
+
+
+
+
+
+### FINDING NEAREST NEIGHBOR
+
 # NearestNeighbor = collections.namedtuple("NearestNeighbor", ["point", "distance"])
 
 # def find_nearest_neighbor(*, tree, point):
@@ -91,57 +155,3 @@ def kdtree(points):
     
 #     search(tree=tree, depth=0)
 #     return best.point
-
-NearestNeighbor = collections.namedtuple("NearestNeighbor", ["point", "distance"])
-
-def find_nearest_neighbor(*, tree, point):
-    """Find the nearest neighbor in a k-d tree for a given point."""
-    k = len(point)
-    conflicts = []
-
-    # best = None
-    def search(*, tree, depth):
-        """Recursively search through the k-d tree to find the
-        nearest neighbor.
-        """
-        # nonlocal best
-        
-        if tree is None:
-            return
-        
-        distance = calculate_hypot(tree.value, point)
-
-        if distance <= CONFLICT_RADIUS:
-            conflicts.append(tree.value)
-            best = NearestNeighbor(point=tree.value, distance=distance)
-        
-
-        axis = depth % k
-        diff = point[axis] - tree.value[axis]
-        if diff <= 0:
-            close, away = tree.left, tree.right
-        else:
-            close, away = tree.right, tree.left
-        
-        search(tree=close, depth=depth+1)
-        if diff**2 < best.distance:
-            search(tree=away, depth=depth+1)
-    
-    search(tree=tree, depth=0)
-    return conflicts
-
-
-
-# def find_conflict_points(*, tree, position):
-#     """MY FUNCTION _____ Find any points in conflict with each other"""
-#     k = len(position)
-
-#     def traverse(*, tree, depth):
-#         """Recurse through tree to find points in a conflict zone"""
-
-
-# USED TUPLES - CHANGE BACK TO LISTS
-# positions = [(gen_coord(), gen_coord()) for i in range(NUM_DRONES)]
-positions = [ (1, 2), (3, 2), (4, 1), (3, 5) ]
-tree = kdtree(positions)
-print(find_nearest_neighbor(tree=tree, point=(1500000, 1)))
